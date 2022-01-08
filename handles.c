@@ -1,4 +1,12 @@
+#if __APPLE__
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#endif
+
 #include "common.h"
+
+#ifndef __APPLE__
 #ifndef sendfile
 #define BUF_SIZE 8192
 ssize_t sendfile(int out_fd, int in_fd, off_t * offset, size_t count )
@@ -49,6 +57,7 @@ ssize_t sendfile(int out_fd, int in_fd, off_t * offset, size_t count )
     }
     return totSent;
 }
+#endif
 #endif
 
 /**
@@ -325,6 +334,9 @@ void ftp_retr(Command *cmd, State *state)
     int fd;
     struct stat stat_buf;
     off_t offset = 0;
+#if __APPLE__
+    off_t len = 0;
+#endif
     int sent_total = 0;
     if(state->logged_in){
 
@@ -339,8 +351,11 @@ void ftp_retr(Command *cmd, State *state)
           
           connection = accept_connection(state->sock_pasv);
           close(state->sock_pasv);
+#ifdef __APPLE__		  
+          if(sent_total = sendfile(fd, connection, 0,  &len, NULL, 0)){
+#else
           if(sent_total = sendfile(connection, fd, &offset, stat_buf.st_size)){
-            
+#endif
             if(sent_total != stat_buf.st_size){
               perror("ftp_retr:sendfile");
               exit(EXIT_SUCCESS);

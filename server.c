@@ -80,11 +80,17 @@ int create_socket(int port)
   int reuse = 1;
 
   /* Server addess */
-  struct sockaddr_in server_address = (struct sockaddr_in){  
+  /*struct sockaddr_in server_address = (struct sockaddr_in){  
      AF_INET,
      htons(port),
      (struct in_addr){INADDR_ANY}
-  };
+  };*/
+  struct sockaddr_in server_address; 
+  memset(&server_address, 0, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  server_address.sin_port =  htons(port);
+  server_address.sin_addr.s_addr = htonl(INADDR_ANY);  
+  
 
 
   if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
