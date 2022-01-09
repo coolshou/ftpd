@@ -91,6 +91,7 @@ static const char *usernames[] =
 static char *welcome_message = "A very warm welcome!";
 
 /* Server functions */
+void getip(int, int *);
 void gen_port(Port *);
 void parse_command(char *, Command *);
 int create_socket(int port);

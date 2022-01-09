@@ -48,7 +48,6 @@ void server(int port)
           printf("User %s sent command: %s\n",(state->username==0)?"unknown":state->username,buffer);
           parse_command(buffer,cmd);
           state->connection = connection;
-          
           /* Ignore non-ascii char. Ignores telnet command */
           if(buffer[0]<=127 || buffer[0]>=0){
             response(cmd,state);
@@ -134,9 +133,12 @@ void getip(int sock, int *ip)
 {
   socklen_t addr_size = sizeof(struct sockaddr_in);
   struct sockaddr_in addr;
+  char host[INET_ADDRSTRLEN];
   getsockname(sock, (struct sockaddr *)&addr, &addr_size);
- 
-  char* host = inet_ntoa(addr.sin_addr);
+  //char* host = inet_ntoa(addr.sin_addr);
+  if (inet_ntop(AF_INET, &addr.sin_addr, host,
+                    INET_ADDRSTRLEN) == NULL)
+        printf("Couldn't convert client address to string\n");
   sscanf(host,"%d.%d.%d.%d",&ip[0],&ip[1],&ip[2],&ip[3]);
 }
 
@@ -211,7 +213,7 @@ void my_wait(int signum)
 
 main()
 {
-  server(8021);
+  server(10121);
   return 0;
 
 }
