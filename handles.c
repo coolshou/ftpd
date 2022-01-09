@@ -194,7 +194,6 @@ void ftp_list(Command *cmd, State *state)
         connection = accept_connection(state->sock_pasv);
         state->message = "150 Here comes the directory listing.\n";
         puts(state->message);
-
         while(entry=readdir(dp)){
           if(stat(entry->d_name,&statbuf)==-1){
             fprintf(stderr, "FTP: Error reading file stats...\n");
@@ -216,7 +215,8 @@ void ftp_list(Command *cmd, State *state)
                 statbuf.st_size,
                 timebuff,
                 entry->d_name);
-          }
+            free(perms);
+			}
         }
         write_state(state);
         state->message = "226 Directory send OK.\n";
@@ -393,6 +393,7 @@ void ftp_stor(Command *cmd, State *state)
     int pipefd[2];
     int res = 1;
     const int buff_size = 8192;
+	char buff[8192];
 
     FILE *fp = fopen(cmd->arg,"w");
 
@@ -417,10 +418,16 @@ void ftp_stor(Command *cmd, State *state)
         /* Using splice function for file receiving.
          * The splice() system call first appeared in Linux 2.6.17.
          */
-
+#ifdef __APPLE__
+        while ((res = read(connection, buff, buff_size))>0){
+            write(fd, buff, res);		   
+        }
+#else
         while ((res = splice(connection, 0, pipefd[1], NULL, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE))>0){
           splice(pipefd[0], NULL, fd, 0, buff_size, SPLICE_F_MORE | SPLICE_F_MOVE);
         }
+
+#endif
 
         /* TODO: signal with ABOR command to exit */
 
@@ -539,14 +546,14 @@ void ftp_size(Command *cmd, State *state)
  * @param perm Permissions mask
  * @param str_perm Pointer to string representation of permissions
  */
-void str_perm(int perm, char *str_perm)
+void str_perm(int perm, char *strperm)
 {
   int curperm = 0;
   int flag = 0;
   int read, write, exec;
   
   /* Flags buffer */
-  char fbuff[3];
+  char fbuff[4];
 
   read = write = exec = 0;
   
@@ -554,15 +561,13 @@ void str_perm(int perm, char *str_perm)
   for(i = 6; i>=0; i-=3){
     /* Explode permissions of user, group, others; starting with users */
     curperm = ((perm & ALLPERMS) >> i ) & 0x7;
-    
-    memset(fbuff,0,3);
+    memset(fbuff,0,4);
     /* Check rwx flags for each*/
     read = (curperm >> 2) & 0x1;
     write = (curperm >> 1) & 0x1;
     exec = (curperm >> 0) & 0x1;
-
     sprintf(fbuff,"%c%c%c",read?'r':'-' ,write?'w':'-', exec?'x':'-');
-    strcat(str_perm,fbuff);
+    strcat(strperm,fbuff);
 
   }
 }
