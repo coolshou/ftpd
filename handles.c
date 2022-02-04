@@ -419,11 +419,16 @@ void ftp_retr(Command *cmd, State *state)
           connection = accept_connection(state->sock_pasv);
           close(state->sock_pasv);
 #ifdef __APPLE__		  
-          if(sent_total = sendfile(fd, connection, 0,  &len, NULL, 0)){
+          len = stat_buf.st_size;
+          if(!sendfile(fd, connection, 0,  &len, NULL, 0)){
 #else
           if(sent_total = sendfile(connection, fd, &offset, stat_buf.st_size)){
 #endif
+#ifdef __APPLE__		  
+            if(len != stat_buf.st_size){
+#else			
             if(sent_total != stat_buf.st_size){
+#endif
               perror("ftp_retr:sendfile");
               exit(EXIT_SUCCESS);
             }
