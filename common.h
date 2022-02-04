@@ -108,6 +108,7 @@ void ftp_mkd(Command *, State *);
 void ftp_rmd(Command *, State *);
 void ftp_pasv(Command *, State *);
 void ftp_list(Command *, State *);
+void ftp_nlst(Command *, State *);
 void ftp_retr(Command *, State *);
 void ftp_stor(Command *, State *);
 void ftp_dele(Command *, State *);

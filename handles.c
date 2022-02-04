@@ -72,6 +72,7 @@ void response(Command *cmd, State *state)
     case PASS: ftp_pass(cmd,state); break;
     case PASV: ftp_pasv(cmd,state); break;
     case LIST: ftp_list(cmd,state); break;
+    case NLST: ftp_nlst(cmd,state); break;
     case CWD:  ftp_cwd(cmd,state); break;
     case PWD:  ftp_pwd(cmd,state); break;
     case MKD:  ftp_mkd(cmd,state); break;
@@ -156,6 +157,72 @@ void ftp_pasv(Command *cmd, State *state)
     state->message = "530 Please login with USER and PASS.\n";
     printf("%s",state->message);
   }
+  write_state(state);
+}
+
+/** NLST command */
+void ftp_nlst(Command *cmd, State *state)
+{
+  if(state->logged_in==1){
+    struct dirent *entry;
+    struct stat statbuf;
+    struct tm *time;
+    char timebuff[80], current_dir[BSIZE];
+    int connection;
+    time_t rawtime;
+
+    /* TODO: dynamic buffering maybe? */
+    char cwd[BSIZE], cwd_orig[BSIZE];
+    memset(cwd,0,BSIZE);
+    memset(cwd_orig,0,BSIZE);
+    
+    /* Later we want to go to the original path */
+    getcwd(cwd_orig,BSIZE);
+    
+    /* Just chdir to specified path */
+    if(strlen(cmd->arg)>0&&cmd->arg[0]!='-'){
+      chdir(cmd->arg);
+    }
+    
+    getcwd(cwd,BSIZE);
+    DIR *dp = opendir(cwd);
+
+    if(!dp){
+      state->message = "550 Failed to open directory.\n";
+    }else{
+      if(state->mode == SERVER){
+
+        connection = accept_connection(state->sock_pasv);
+        state->message = "150 Here comes the directory listing.\n";
+        puts(state->message);
+        while(entry=readdir(dp)){
+          if(stat(entry->d_name,&statbuf)==-1){
+            fprintf(stderr, "FTP: Error reading file stats...\n");
+          }else{
+            /* Convert time_t to tm struct */
+            dprintf(connection,
+                "%s\r\n", 
+                entry->d_name);
+			}
+        }
+        write_state(state);
+        state->message = "226 Directory send OK.\n";
+        state->mode = NORMAL;
+        close(connection);
+        close(state->sock_pasv);
+
+      }else if(state->mode == CLIENT){
+        state->message = "502 Command not implemented.\n";
+      }else{
+        state->message = "425 Use PASV or PORT first.\n";
+      }
+    }
+    closedir(dp);
+    chdir(cwd_orig);
+  }else{
+    state->message = "530 Please login with USER and PASS.\n";
+  }
+  state->mode = NORMAL;
   write_state(state);
 }
 
@@ -393,7 +460,7 @@ void ftp_stor(Command *cmd, State *state)
     int pipefd[2];
     int res = 1;
     const int buff_size = 8192;
-	char buff[8192];
+	  char buff[8192];
 
     FILE *fp = fopen(cmd->arg,"w");
 
