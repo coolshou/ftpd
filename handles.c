@@ -430,6 +430,9 @@ void ftp_retr(Command *cmd, State *state)
             if(sent_total != stat_buf.st_size){
 #endif
               perror("ftp_retr:sendfile");
+              close(fd);
+              state->message = "226 Patially file send OK.\n";
+              write_state(state);
               exit(EXIT_SUCCESS);
             }
 
