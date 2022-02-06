@@ -15,6 +15,7 @@ void server(int port)
     char buffer[BSIZE];
     Command *cmd = malloc(sizeof(Command));
     State *state = malloc(sizeof(State));
+    state->sock_pasv = -1;
     pid = fork();
     
     memset(buffer,0,BSIZE);
@@ -60,14 +61,14 @@ void server(int port)
         }
       }
       printf("Client disconnected.\n");
-	  free(cmd);
-	  free(state);
+	    free(cmd);
+	    free(state);
       exit(0);
     }else{
       printf("closing... :(\n");
       close(connection);
-	  free(cmd);
-	  free(state);
+	    free(cmd);
+	    free(state);
     }
   }
 }
