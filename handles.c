@@ -143,7 +143,10 @@ void ftp_pasv(Command *cmd, State *state)
     getip(state->connection,ip);    
 
     /* Close previous passive socket? */
-    close(state->sock_pasv);
+    if (state->sock_pasv > 0){
+        close(state->sock_pasv);
+        state->sock_pasv = -1;
+    }
 
     /* Start listening here, but don't accept the connection */
     state->sock_pasv = create_socket((256*port->p1)+port->p2);

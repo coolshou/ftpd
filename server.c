@@ -185,7 +185,8 @@ void write_state(State *state)
  */
 void gen_port(Port *port)
 {
-  srand(time(NULL));
+  //srand(time(NULL));
+  srand(getpid());
   port->p1 = 128 + (rand() % 64);
   port->p2 = rand() % 0xff;
 
