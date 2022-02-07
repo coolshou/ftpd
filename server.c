@@ -16,9 +16,9 @@ void server(int port)
     Command *cmd = malloc(sizeof(Command));
     State *state = malloc(sizeof(State));
     state->sock_pasv = -1;
-	state->username = NULL; 
-	state->message = NULL;
-	state->connection = -1;
+	  state->username = NULL; 
+	  state->message = NULL;
+	  state->connection = -1;
     pid = fork();
     
     memset(buffer,0,BSIZE);
@@ -30,6 +30,7 @@ void server(int port)
 
     if(pid==0){
       close(sock);
+      srand(getpid());
       char welcome[BSIZE] = "220 ";
       if(strlen(welcome_message)<BSIZE-4){
         strcat(welcome,welcome_message);
@@ -66,7 +67,8 @@ void server(int port)
       }
       printf("Client disconnected.\n");
 	    free(cmd);
-      //free(state->username);
+      if(state->username)
+         free(state->username);
 	    free(state);
       exit(0);
     }else{
@@ -110,12 +112,14 @@ int create_socket(int port)
 
   /* Address can be reused instantly after program exits */
   setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof reuse);
+  setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof reuse);
 
   /* Bind socket to server address */
   if(bind(sock,(struct sockaddr*) &server_address, sizeof(server_address)) < 0){
-    //fprintf(stderr, "Cannot bind socket to address");
+    fprintf(stderr, "bind error to address, port %d\n", port);
     perror("Cannot bind socket to address");   
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
+    return(-1);
   }
 
   listen(sock,5);
@@ -205,7 +209,7 @@ void write_state(State *state)
 void gen_port(Port *port)
 {
   //srand(time(NULL));
-  srand(getpid());
+  //srand(getpid());
   port->p1 = 128 + (rand() % 64);
   port->p2 = rand() % 0xff;
 
