@@ -4,8 +4,7 @@
  * @param port Server port
  */
 void server(int port)
-{
-  set_res_limits();
+{  
   int sock = create_socket(port);
   struct sockaddr_in client_address;
   int len = sizeof(client_address);
@@ -64,12 +63,14 @@ void server(int port)
       }
       printf("Client disconnected.\n");
 	    free(cmd);
+      free(state->username);
 	    free(state);
       exit(0);
     }else{
-      printf("closing... :(\n");
+      //printf("closing... :(\n");
       close(connection);
 	    free(cmd);
+      free(state->username);
 	    free(state);
     }
   }
@@ -109,7 +110,8 @@ int create_socket(int port)
 
   /* Bind socket to server address */
   if(bind(sock,(struct sockaddr*) &server_address, sizeof(server_address)) < 0){
-    fprintf(stderr, "Cannot bind socket to address");
+    //fprintf(stderr, "Cannot bind socket to address");
+    perror("Cannot bind socket to address");   
     exit(EXIT_FAILURE);
   }
 
@@ -149,16 +151,6 @@ void getip(int sock, int *ip)
   sscanf(host,"%d.%d.%d.%d",&ip[0],&ip[1],&ip[2],&ip[3]);
 }
 
-/**
- * Lookup enum value of string
- * @param cmd Command string 
- * @return Enum index if command found otherwise -1
- */
-
-int lookup_cmd(char *cmd){
-  const int cmdlist_count = sizeof(cmdlist_str)/sizeof(char *);
-  return lookup(cmd, cmdlist_str, cmdlist_count);
-}
 
 /**
  * General lookup for string arrays
@@ -176,6 +168,19 @@ int lookup(char *needle, const char **haystack, int count)
   }
   return -1;
 }
+
+/**
+ * Lookup enum value of string
+ * @param cmd Command string 
+ * @return Enum index if command found otherwise -1
+ */
+
+int lookup_cmd(char *cmd){
+  const int cmdlist_count = sizeof(cmdlist_str)/sizeof(char *);
+  return lookup(cmd, cmdlist_str, cmdlist_count);
+}
+
+
 
 
 /** 
@@ -246,7 +251,8 @@ void my_wait(int signum)
 
 main()
 {
-  server(10121);
+  //set_res_limits();
+  server(21);
   return 0;
 
 }

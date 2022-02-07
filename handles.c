@@ -155,7 +155,7 @@ void ftp_pasv(Command *cmd, State *state)
     state->message = buff;
     state->mode = SERVER;
     puts(state->message);
-
+    free(port);
   }else{
     state->message = "530 Please login with USER and PASS.\n";
     printf("%s",state->message);
