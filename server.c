@@ -16,6 +16,9 @@ void server(int port)
     Command *cmd = malloc(sizeof(Command));
     State *state = malloc(sizeof(State));
     state->sock_pasv = -1;
+	state->username = NULL; 
+	state->message = NULL;
+	state->connection = -1;
     pid = fork();
     
     memset(buffer,0,BSIZE);
@@ -63,14 +66,14 @@ void server(int port)
       }
       printf("Client disconnected.\n");
 	    free(cmd);
-      free(state->username);
+      //free(state->username);
 	    free(state);
       exit(0);
     }else{
       //printf("closing... :(\n");
       close(connection);
 	    free(cmd);
-      free(state->username);
+      //free(state->username);
 	    free(state);
     }
   }
@@ -218,7 +221,7 @@ void parse_command(char *cmdstring, Command *cmd)
   sscanf(cmdstring,"%s %s",cmd->command,cmd->arg);
 }
 
-
+#ifndef __APPLE__
 void set_res_limits()
 {
 	// Set MAX FD's to 100000
@@ -238,6 +241,7 @@ void set_res_limits()
 	}
 	printf("Prioirty limit set to 100\n");
 }
+#endif
 
 /**
  * Handles zombies
