@@ -5,6 +5,7 @@
  */
 void server(int port)
 {
+  set_res_limits();
   int sock = create_socket(port);
   struct sockaddr_in client_address;
   int len = sizeof(client_address);
@@ -37,6 +38,7 @@ void server(int port)
       /* Write welcome message */
       strcat(welcome,"\n");
       write(connection, welcome,strlen(welcome));
+      state->connection = connection;
 
       /* Read commands from client */
       while (bytes_read = read(connection,buffer,BSIZE)){
@@ -48,7 +50,7 @@ void server(int port)
           buffer[BSIZE-1] = '\0';
           printf("User %s sent command: %s\n",(state->username==0)?"unknown":state->username,buffer);
           parse_command(buffer,cmd);
-          state->connection = connection;
+          //state->connection = connection;
           /* Ignore non-ascii char. Ignores telnet command */
           if(buffer[0]<=127 || buffer[0]>=0){
             response(cmd,state);
@@ -181,7 +183,11 @@ int lookup(char *needle, const char **haystack, int count)
  */
 void write_state(State *state)
 {
-  write(state->connection, state->message, strlen(state->message));
+  ssize_t len = write(state->connection, state->message, strlen(state->message));
+  if (len <= 0){
+    perror("sending data error:");
+  }
+
 }
 
 /**
@@ -205,6 +211,27 @@ void gen_port(Port *port)
 void parse_command(char *cmdstring, Command *cmd)
 {
   sscanf(cmdstring,"%s %s",cmd->command,cmd->arg);
+}
+
+
+void set_res_limits()
+{
+	// Set MAX FD's to 100000
+	struct rlimit res;
+	res.rlim_cur = 1000000;
+	res.rlim_max = 1000000;
+	if( setrlimit(RLIMIT_NOFILE, &res) == -1 )
+	{
+		perror("Resource FD limit");
+		exit(0);
+	}
+	printf("FD limit set to 1000000\n");	
+	if( setrlimit(RLIMIT_RTPRIO, &res) == -1 )
+	{
+		perror("Resource Prioiry limit");
+		exit(0);
+	}
+	printf("Prioirty limit set to 100\n");
 }
 
 /**
