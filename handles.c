@@ -149,7 +149,9 @@ void ftp_pasv(Command *cmd, State *state)
     }
 
     /* Start listening here, but don't accept the connection */
-    state->sock_pasv = create_socket((256*port->p1)+port->p2);
+    while((state->sock_pasv = create_socket((256*port->p1)+port->p2))==-1)
+        gen_port(port);
+
     printf("pid: %d, port: %d\n",getpid(), 256*port->p1+port->p2);
     sprintf(buff,response,ip[0],ip[1],ip[2],ip[3],port->p1,port->p2);
     state->message = buff;
