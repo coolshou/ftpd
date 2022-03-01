@@ -149,6 +149,8 @@ void ftp_pasv(Command *cmd, State *state)
     }
 
     /* Start listening here, but don't accept the connection */
+    // see https://serverfault.com/questions/270745/why-does-ftp-passive-mode-require-a-port-range-as-opposed-to-only-one-port
+    // for discussions about why pasv mode uses a port range
     while((state->sock_pasv = create_socket((256*port->p1)+port->p2))==-1)
         gen_port(port);
 

@@ -260,7 +260,7 @@ void my_wait(int signum)
 main()
 {
   //set_res_limits();
-  server(21);
+  server(10121);
   return 0;
 
 }
