@@ -257,7 +257,7 @@ void my_wait(int signum)
   wait(&status);
 }
 
-main()
+int main()
 {
   //set_res_limits();
   server(10121);

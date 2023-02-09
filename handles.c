@@ -281,7 +281,7 @@ void ftp_list(Command *cmd, State *state)
             strftime(timebuff,80,"%b %d %H:%M",time);
             str_perm((statbuf.st_mode & ALLPERMS), perms);
             dprintf(connection,
-                "%c%s %5d %4d %4d %8d %s %s\r\n", 
+                "%c%s %5ld %4d %4d %8ld %s %s\r\n", 
                 (entry->d_type==DT_DIR)?'d':'-',
                 perms,statbuf.st_nlink,
                 statbuf.st_uid, 
@@ -610,7 +610,7 @@ void ftp_size(Command *cmd, State *state)
     memset(filesize,0,128);
     /* Success */
     if(stat(cmd->arg,&statbuf)==0){
-      sprintf(filesize, "213 %d\n", statbuf.st_size);
+      sprintf(filesize, "213 %ld\n", statbuf.st_size);
       state->message = filesize;
     }else{
       state->message = "550 Could not get file size.\n";

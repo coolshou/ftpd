@@ -8,11 +8,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <netinet/in.h>
 #include <time.h>
 #include <dirent.h>
+#include <arpa/inet.h>
 
 #ifndef BSIZE
   #define BSIZE 1024
@@ -98,6 +100,8 @@ void parse_command(char *, Command *);
 int create_socket(int port);
 void write_state(State *);
 int accept_connection(int);
+int lookup_cmd(char *cmd);
+int lookup(char *needle, const char **haystack, int count);
 
 /* Commands handle functions*/
 void response(Command *, State *);
