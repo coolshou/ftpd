@@ -1,4 +1,10 @@
+#include <limits.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "common.h"
+#include "version.h"
+
 /** 
  * Sets up server and handles incoming connections
  * @param port Server port
@@ -257,10 +263,73 @@ void my_wait(int signum)
   wait(&status);
 }
 
-int main()
+int converttoint(const char *buff) {
+  char *end;
+  int si;
+ 
+  errno = 0;
+ 
+  const long sl = strtol(buff, &end, 10);
+ 
+  if (end == buff) {
+    fprintf(stderr, "%s: not a decimal number\n", buff);
+  } else if ('\0' != *end) {
+    fprintf(stderr, "%s: extra characters at end of input: %s\n", buff, end);
+  } else if ((LONG_MIN == sl || LONG_MAX == sl) && ERANGE == errno) {
+    fprintf(stderr, "%s out of range of type long\n", buff);
+  } else if (sl > INT_MAX) {
+    fprintf(stderr, "%ld greater than INT_MAX\n", sl);
+  } else if (sl < INT_MIN) {
+     fprintf(stderr, "%ld less than INT_MIN\n", sl);
+  } else {
+    si = (int)sl;
+    return si;
+    /* Process si */
+  }
+  return -1;
+}
+
+void help(char *argv[])
 {
+  printf("v%s\n", VERSION);
+  printf("Usage:\n");
+  printf(" %s [home dir] [port]\n", argv[0]);
+  printf("\t[port]: port number, default 10121 \n");
+  printf("\t[home dir]: home path, default current path\n");
+
+}
+
+int main(int argc, char *argv[])
+{
+  char *homepath=".";
+  int port=10121;
+  // Structure which would store the metadata
+  struct stat sb;
   //set_res_limits();
-  server(10121);
+  if (argc < 2) {
+    help(argv);
+    exit(-1);
+  }
+  if (argc >= 2) {
+    homepath = argv[1];
+    if (stat(homepath, &sb)!=0) {
+      printf("ERROR:Home folder not accessable!! %s\n" , homepath);
+      exit(-2);
+    }else{
+      if(chdir(homepath)==0){
+        ;
+      }else{
+        printf("ERROR:Can not chdir to %s !!\n" , homepath);
+        exit(-3);
+      }
+    }
+  }
+  if (argc >= 3) {
+    port = converttoint(argv[2]);
+  }
+
+  printf("start ftp server on port %d, home:%s\n", port, homepath);
+  server(port);
   return 0;
 
 }
